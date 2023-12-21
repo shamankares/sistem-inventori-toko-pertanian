@@ -1,0 +1,72 @@
+version: "3.7"
+services:
+  app:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    image: ims
+    container_name: ims-app
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www
+    networks:
+      - ims
+
+  db:
+    image: container-registry.oracle.com/mysql/community-cluster
+    container_name: tokopertanian-db
+    command: mysqld
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - ./docker-compose/mysql:/docker-entrypoint-initdb.d
+    networks:
+      ims:
+      mysql-cluster:
+        ipv4_address: 192.168.0.10
+
+  dbmanager-1:
+    image: container-registry.oracle.com/mysql/community-cluster
+    command: ndb_mgmd
+    networks:
+      mysql-cluster:
+        ipv4_address: 192.168.0.2
+  dbndb-1:
+    image: container-registry.oracle.com/mysql/community-cluster
+    command: ndbd
+    networks:
+      mysql-cluster:
+        ipv4_address: 192.168.0.3
+  dbndb-2:
+    image: container-registry.oracle.com/mysql/community-cluster
+    command: ndbd
+    networks:
+      mysql-cluster:
+        ipv4_address: 192.168.0.4
+
+  nginx:
+    image: nginx:alpine
+    container_name: ims-nginx
+    restart: unless-stopped
+    ports:
+      - 8000:80
+    volumes:
+      - ./:/var/www
+      - ./docker-compose/nginx:/etc/nginx/conf.d/
+    networks:
+      - ims
+
+networks:
+  ims:
+    driver: bridge
+  mysql-cluster:
+    ipam:
+      config:
+        - subnet: "192.168.0.0/16"
