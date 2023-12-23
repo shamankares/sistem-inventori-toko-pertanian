@@ -50,7 +50,7 @@ class ProductController extends Controller
             'nama'          => 'required|string',
             'harga'         => 'required',
             'qty'           => 'required',
-            'image'         => 'required',
+            'image'         => 'required|dimensions:min_width=1,min_height=1',
             'supplier_id'   => 'required',
         ]);
 
@@ -107,7 +107,7 @@ class ProductController extends Controller
             'nama'          => 'required|string',
             'harga'         => 'required',
             'qty'           => 'required',
-//            'image'         => 'required',
+            'image'         => 'nullable|dimensions:min_width=1,min_height=1',
             'supplier_id'   => 'required',
         ]);
 
